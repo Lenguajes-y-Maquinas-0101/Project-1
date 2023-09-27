@@ -1,0 +1,354 @@
+/*
+Gramatica para el Robot:
+Autor: Alejandro Arango
+Modificado por: Silvia Takahashi
+Modificado por: Juan Pablo Morales.
+Agregadas producciones para manejar globos
+Modificado por Silvia Takahashi
+
+
+ **/
+
+
+options 
+{
+  
+	LOOKAHEAD=1; 
+	IGNORE_CASE=true;
+	STATIC = false;
+	
+}
+   
+
+PARSER_BEGIN(Robot)
+
+package uniandes.lym.robot.control;
+
+import uniandes.lym.robot.kernel.*;
+import uniandes.lym.robot.view.Console;
+ 
+import java.awt.Point;
+import java.io.*;
+import java.util.Vector;
+import java.util.LinkedList;
+
+@SuppressWarnings("serial")
+public class Robot 
+{
+
+	
+	
+	private RobotWorldDec world;
+
+	private Map <String, Function> funciones = parser.program;
+	
+	
+	void setWorld(RobotWorld w) {
+		world = (RobotWorldDec) w;	
+	}
+
+	String salida=new String();
+
+	public boolean var(String name)
+	{
+		if (variables.containsKey(name)) {
+		  return true;
+	}
+	else {
+	  return false;
+	}
+}
+
+	public int varValue(String name) {
+	  int respuesta = variables.get(name)
+
+	  return respuesta;
+	}
+
+	public void saveVar (String name, int value) {
+	 	variables.put(name, value)
+	}
+	
+}
+PARSER_END(Robot)
+
+SKIP:
+{
+	" "
+	|	"\r"
+	|	"\t"
+	| "\n"
+}
+
+TOKEN: /* Nombres de Comandos */
+{
+
+			<WALK:  "walk">
+		| 	<TURN: "turn">
+		| 	<LEAP: "leap">
+		| 	<PICK: "Pick">
+		|  < TURNTO: "turnto" >
+		|  <DROP: "drop" >
+		| < GET: "get" >
+		| < GRAB: "grab" >
+		| < LETGO: "letgo" >
+		| < NOP: "nop" >
+        |  < JUMP:  "jump" >
+        | < DEFVAR: "defVar" >
+        | < DEFPROC: "defProc" >
+		| < IF: "if" >
+		| < ELSE: "else" >
+		| < WHILE: "while" >
+		| < REPEAT: "repeat" >
+		| < TIMES: "times" >
+		| < FACING: "facing" >
+		| < CAN: "can" >
+		| < NOT: "not" >	
+
+}
+
+TOKEN:
+{
+		< SOUTH: "south" >
+| < NORTH: "north" >
+| < EAST: "east" >
+| < WEST: "west" >
+| < FRONT: "front" >
+| < BACK: "back" >
+| < RIGHT: "right" >
+| < LEFT: "left" >
+
+}
+
+
+
+TOKEN :
+{
+		<NUM: (<DIGIT>)+ >
+		|  	<#DIGIT: ["0"-"9"] >
+		| < NAME: (< CHAR >(< CHAR >|< DIGIT >)*) >
+		| < #CHAR: ["A"-"Z"] >
+		| < VAR: variables.keys >
+        
+}
+
+	//boolean command(uniandes.lym.robot.view.Console sistema) :
+	/*boolean command(Console sistema):
+	{	
+		
+		int x,y;
+		salida=new String();	
+	}
+
+	
+	{
+		(		  (
+		   <RIGHT> "(" ")" {world.turnRight();salida = "Command: Turnright";}
+		| 	<MOV>  "(" x=num() ")" {world.moveForward(x,false);salida = "Command: Moveforward ";}  
+		| 	<HOP>  "(" x=num() ")" {world.moveForward(x,true);salida = "Command:Jumpforward ";}
+		| 	<GO>  "(" x=num() "," y=num()")" {world.setPostion(x,y);salida = "Command:GO ";}  
+		|  <PUT> "("  put() ")"					  			
+		|  <PICK> "(" get()  ")"	
+	    |  < POP > "(" x=num() ")" {world.popBalloons(x); salida = "Comando:  Pop";}
+		) ";" 
+
+		{
+		    try {
+	    			 Thread.sleep(900);
+	    	    } catch (InterruptedException e) {
+	    			        System.err.format("IOException: %s%n", e);
+	    		    }
+	    			 
+			sistema.printOutput(salida);
+			return true;
+		})+
+
+    	| <EOF> {return false;} 
+	}
+
+	void put() :
+	{
+		int f=1;	
+	}
+	{
+		( <CHIPS>    "," f=num() {world.putChips(f); salida = "Command:  Put Chips"; })
+		|  	  ( <BALLOONS>   "," f=num() {world.putBalloons(f); salida = "Command:  Put Balloons";})	 
+
+	}
+
+	void get() :
+	{
+		int f=1;	
+	}
+	{
+		( <CHIPS>   "," f=num() {world.pickChips(f);salida = "Command:  Pick chips";})
+		|  	  ( <BALLOONS>   "," f=num() {world.grabBalloons(f);salida="Command:  Pick balloons";})	 
+
+	} */
+
+/* aqui inician las de nuestro proyecto */
+
+	void command():
+	{
+	}
+	{
+	  simpleCommands()|block()|defVar()
+	}
+  
+	void block():
+	{
+	}
+	{
+		" { " ((simpleCommands()(";"simpleCommands())*) /* aca falta agregar las funciones creadas, irian algo asi "simpleCommands()|funciones()" en ambas partes */
+		| 	cycle()) "}"
+
+	}
+	
+	void simpleCommands():
+	{
+	}
+	{
+	  jump()|walk()|leap()|turn()|turnto()|move()|< NOP > "("")"
+	
+	}
+
+	void walk():
+	{
+	}
+	{
+	  < WALK > "(" (f= num()) ")"
+	| <WALK > "(" f = num() "," ((< FRONT >| < RIGHT >| < LEFT >| < BACK >)|(< NORTH >| < SOUTH >| < EAST >|< WEST >)) ")"
+	}
+
+	void leap():
+	{
+	}
+	{
+		< LEAP > "(" ( f = num() ")"
+| 	< LEAP > "(" f = num() "," ((< FRONT >| < RIGHT >| < LEFT >| < BACK >)|(< NORTH >| < SOUTH >| < EAST >|< WEST >))) ")"
+	}
+
+	void jump():
+	{
+	}
+	{
+	< JUMP > "(" f= num() "," g = num() ")"
+	}
+
+	void turn():
+	{
+	}
+	{
+	< TURN > "("(< LEFT >|< RIGHT >) ")"
+	}
+
+	void turnto():
+	{
+	}
+	{
+	< TURNTO > "(" (< NORTH >| < SOUTH >|< EAST >|< WEST >) ")"
+	}
+
+	void move():
+	{
+	}
+	{
+	  < DROP > "(" f = num() ")"
+	| < GET > "(" f = num() ")"
+	| < GRAB > "(" f = num() ")"
+	| < LETGO > "(" f = num() ")"
+	}
+
+	void defVar():
+	{
+	}
+	{
+		  < DEFVAR > function = < NAME > "=" f = num()
+
+	}
+
+	void defProc():
+	{
+	}
+	{
+		< DEFPROC > < NAME > "(" (< NAME > ("," < NAME >)*)")" block()
+	}
+	
+
+	void cycle():
+	{
+	}
+	{
+		< IF > "(" (not()|can()|facing()) ")" block() < ELSE > block()
+	|	 < WHILE > "(" (not()|can()|facing()) ")" block()
+	| < REPEAT > f = num() < TIMES > block()
+	}
+
+	boolean not():
+	{
+	}
+	{
+	 < NOT > ":" (can()|facing())
+	 {
+	   try {
+				    int a = 1; /*aqui debe hacer el codigo para que intente o verifique lo que esta ahí*/
+				} catch (InterruptedException e) {
+				    			        System.err.format("IOException: %s%n", e);
+				    		    } }
+	}
+
+	boolean can():
+	{
+	}
+	{
+	< CAN > "(" simpleCommands() ")"
+	{
+			try {
+				    int a = 1; /*aqui debe hacer el codigo para que intente o verifique lo que esta ahí*/
+				} catch (InterruptedException e) {
+				    			        System.err.format("IOException: %s%n", e);
+				    		    } }
+	}
+
+	boolean facing():
+	{
+	}
+	{
+		< FACING > "(" (< NORTH >|< SOUTH >|< WEST >|< EAST >) ")"
+		{
+			try {
+				    int a = 1; /*aqui debe hacer el codigo para que intente o verifique lo que esta ahí*/
+				} catch (InterruptedException e) {
+				    			        System.err.format("IOException: %s%n", e);
+				    		    } }
+	}
+	
+	   
+	
+
+	/**
+	 * Unsigned decimal number
+	 * @return the corresponding value of the string
+	 * @error  corresponding value is too large
+	 */
+
+	int num() throws Error:
+	{	
+		int total=1;
+	}
+	{
+		<NUM>
+		{
+			try 
+			{
+				total = Integer.parseInt(token.image);
+			} 
+			catch (NumberFormatException ee) 
+			{
+				throw new Error("Number out of bounds: "+token.image+" !!");
+			}
+			return total;
+		}
+	}
+
+	
