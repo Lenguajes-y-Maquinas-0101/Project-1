@@ -14,7 +14,10 @@ import java.util.LinkedList;
 public class Robot implements RobotConstants {
 
 
+
         private RobotWorldDec world;
+
+        private Map <String, Integer> variables = new HashMap <String, Integer >();
 
 
         void setWorld(RobotWorld w) {
@@ -22,6 +25,26 @@ public class Robot implements RobotConstants {
         }
 
         String salida=new String();
+
+        public boolean var(String name)
+        {
+                if (variables.containsKey(name)) {
+                  return true;
+        }
+        else {
+          return false;
+        }
+}
+
+        public Integer varValue(String name) {
+          Integer respuesta = variables.get(name);
+
+          return respuesta;
+        }
+
+        public void saveVar (String name, Integer value) {
+                variables.put(name, value);
+        }
 
 //boolean command(uniandes.lym.robot.view.Console sistema) :
         /*boolean command(Console sistema):
@@ -462,9 +485,12 @@ public class Robot implements RobotConstants {
 
   final public void defVar() throws ParseException {
     jj_consume_token(DEFVAR);
-    function = jj_consume_token(NAME);
+    function = name();
     jj_consume_token(44);
     f = num();
+{
+                      saveVar(function, f);
+                    }
 }
 
   final public void defProc() throws ParseException {
@@ -633,7 +659,13 @@ try {
 	 * @error  corresponding value is too large
 	 */
   final public 
-        int num() throws ParseException, Error {int total=1;
+        String name() throws ParseException, Error {Token token;
+    token = jj_consume_token(NAME);
+{if ("" != null) return token.image;}
+    throw new Error("Missing return statement in function");
+}
+
+  final public int num() throws ParseException, Error {int total=1;
     jj_consume_token(NUM);
 try
                         {
@@ -644,6 +676,12 @@ try
                                 {if (true) throw new Error("Number out of bounds: "+token.image+" !!");}
                         }
                         {if ("" != null) return total;}
+    throw new Error("Missing return statement in function");
+}
+
+  final public int variable() throws ParseException {Token token;
+    name = name();
+{if ("" != null) return varValue(name);}
     throw new Error("Missing return statement in function");
 }
 

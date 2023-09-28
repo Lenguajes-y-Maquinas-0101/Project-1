@@ -40,7 +40,7 @@ public class Robot
 	
 	private RobotWorldDec world;
 
-	private Map <String, Function> funciones = parser.program;
+	private Map <String, Integer> variables = new HashMap <String, Integer >();
 	
 	
 	void setWorld(RobotWorld w) {
@@ -59,17 +59,18 @@ public class Robot
 	}
 }
 
-	public int varValue(String name) {
-	  int respuesta = variables.get(name)
+	public Integer varValue(String name) {
+	  Integer respuesta = variables.get(name);
 
 	  return respuesta;
 	}
 
-	public void saveVar (String name, int value) {
-	 	variables.put(name, value)
+	public void saveVar (String name, Integer value) {
+	 	variables.put(name, value);
 	}
 	
 }
+
 PARSER_END(Robot)
 
 SKIP:
@@ -128,7 +129,6 @@ TOKEN :
 		|  	<#DIGIT: ["0"-"9"] >
 		| < NAME: (< CHAR >(< CHAR >|< DIGIT >)*) >
 		| < #CHAR: ["A"-"Z"] >
-		| < VAR: variables.keys >
         
 }
 
@@ -216,23 +216,23 @@ TOKEN :
 	{
 	}
 	{
-	  < WALK > "(" (f= num()) ")"
-	| <WALK > "(" f = num() "," ((< FRONT >| < RIGHT >| < LEFT >| < BACK >)|(< NORTH >| < SOUTH >| < EAST >|< WEST >)) ")"
+	  < WALK > "(" (f= num()| f = variable()) ")"
+	| <WALK > "(" (f = num()|f = variable()) "," ((< FRONT >| < RIGHT >| < LEFT >| < BACK >)|(< NORTH >| < SOUTH >| < EAST >|< WEST >)) ")"
 	}
 
 	void leap():
 	{
 	}
 	{
-		< LEAP > "(" ( f = num() ")"
-| 	< LEAP > "(" f = num() "," ((< FRONT >| < RIGHT >| < LEFT >| < BACK >)|(< NORTH >| < SOUTH >| < EAST >|< WEST >))) ")"
+		< LEAP > "(" ( f = num()|f = variable()) ")"
+| 	< LEAP > "(" ((f = num()| f = variable()) "," ((< FRONT >| < RIGHT >| < LEFT >| < BACK >)|(< NORTH >| < SOUTH >| < EAST >|< WEST >))) ")"
 	}
 
 	void jump():
 	{
 	}
 	{
-	< JUMP > "(" f= num() "," g = num() ")"
+	< JUMP > "(" (f= num()|f = variable()) "," (g = num()| g = variable()) ")"
 	}
 
 	void turn():
@@ -253,17 +253,22 @@ TOKEN :
 	{
 	}
 	{
-	  < DROP > "(" f = num() ")"
-	| < GET > "(" f = num() ")"
-	| < GRAB > "(" f = num() ")"
-	| < LETGO > "(" f = num() ")"
+	  < DROP > "(" (f = num()| f = variable()) ")"
+	| < GET > "(" (f = num()| f = variable()) ")"
+	| < GRAB > "(" (f = num()| f = variable()) ")"
+	| < LETGO > "(" (f = num()| f = variable()) ")"
 	}
 
 	void defVar():
 	{
 	}
 	{
-		  < DEFVAR > function = < NAME > "=" f = num()
+		  < DEFVAR > function = name() "=" (f = num()| f = variable())
+		  {
+		    {
+		      saveVar(function, f);
+		    }
+		  }
 
 	}
 
@@ -332,6 +337,17 @@ TOKEN :
 	 * @error  corresponding value is too large
 	 */
 
+	String name() throws Error:
+	{
+	  Token token;
+	}
+	{
+		(token = < NAME >)
+		{
+			return token.image;
+		}
+	}
+
 	int num() throws Error:
 	{	
 		int total=1;
@@ -350,5 +366,14 @@ TOKEN :
 			return total;
 		}
 	}
+
+	int variable():
+	{
+	}
+{
+	name = name() {
+	  return varValue(name);
+	}
+}
 
 	
